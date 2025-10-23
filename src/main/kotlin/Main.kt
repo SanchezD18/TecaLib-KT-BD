@@ -20,19 +20,20 @@ fun main() {
     val scanner = Scanner(System.`in`)
     var seguir = true
     while (seguir) {
-        menu()
+        println()
+        println("---------------------------------")
+        println(" ¿Con que tabla quieres trabajar? ")
+        println("1. Libros")
+        println("2. Clientes")
+        println("3. Prestamos")
         print("Selecciona una opción: ")
         try {
             val opcion = scanner.nextInt()
             scanner.nextLine()
             when (opcion) {
                 1 -> {
-                    println()
-                    println("--- Mostrar libros ---")
-                    LibrosDAO.listarLibros().forEach { libro ->
-                            println("  - ID: ${libro.id}, Título: ${libro.titulo}, Autor: ${libro.autor}, Editorial: ${libro.editorial}, Precio: ${libro.precio}€")
-                        }
-                    }
+                    menuLibros()
+                }
                 2 -> {
                     println()
                     println("--- Mostrar libro por ID ---")
@@ -42,7 +43,7 @@ fun main() {
 
                     val libro = LibrosDAO.consultarLibroPorID(idlibro)
                     if (libro != null) {
-                        println("Libro encontrado: - ID: ${libro.id}, Título: ${libro.titulo}, Autor: ${libro.autor}, Editorial: ${libro.editorial}, Precio: ${libro.precio}€")
+                        println("Libro encontrado: - ID: ${libro.id}, Título: ${libro.titulo}, Autor: ${libro.autor}, Editorial: ${libro.editorial}, Precio: ${libro.precio}€, Disponible: ${libro.disponible}")
                     } else {
                         println("No se encontró ningun libro con ese ID.")
                     }
@@ -63,7 +64,8 @@ fun main() {
                             titulo = titulo,
                             autor = autor,
                             editorial = editorial,
-                            precio = precio
+                            precio = precio,
+                            disponible = true
                         )
                     )
                 }
@@ -71,7 +73,7 @@ fun main() {
                     println()
                     println("--- Modificar precio ---")
                     LibrosDAO.listarLibros().forEach { libro ->
-                        println("  - ID: ${libro.id}, Título: ${libro.titulo}, Autor: ${libro.autor}, Editorial: ${libro.editorial}, Precio: ${libro.precio}€")
+                        println("  - ID: ${libro.id}, Título: ${libro.titulo}, Autor: ${libro.autor}, Editorial: ${libro.editorial}, Precio: ${libro.precio}€, Disponible: ${libro.disponible}")
                     }
                     print("ID del libro a modificar: ")
                     val idLibro = scanner.nextInt()
@@ -85,31 +87,35 @@ fun main() {
                     print("Nuevo precio: ")
                     val nuevoPrecio = scanner.nextDouble()
                     scanner.nextLine()
+                    print("Disponible (1 Sí - 0 No)")
+                    val nuevoDisponible = scanner.nextInt()
+                    scanner.nextLine()
 
                     LibrosDAO.actualizarLibro(Libro(
                         id = idLibro,
                         titulo = nuevoTitulo,
                         autor = nuevoAutor,
                         editorial = nuevaEditorial,
-                        precio = nuevoPrecio
+                        precio = nuevoPrecio,
+                        disponible = nuevoDisponible == 1
                     ))
 
                     LibrosDAO.listarLibros().forEach { libro ->
-                        println("  - ID: ${libro.id}, Título: ${libro.titulo}, Autor: ${libro.autor}, Editorial: ${libro.editorial}, Precio: ${libro.precio}€")
+                        println("  - ID: ${libro.id}, Título: ${libro.titulo}, Autor: ${libro.autor}, Editorial: ${libro.editorial}, Precio: ${libro.precio}€, Disponible: ${libro.disponible}")
                     }
                 }
                 5 -> {
                     println()
                     println("--- Eliminar libro ---")
                     LibrosDAO.listarLibros().forEach { libro ->
-                        println("  - ID: ${libro.id}, Título: ${libro.titulo}, Autor: ${libro.autor}, Editorial: ${libro.editorial}, Precio: ${libro.precio}€")
+                        println("  - ID: ${libro.id}, Título: ${libro.titulo}, Autor: ${libro.autor}, Editorial: ${libro.editorial}, Precio: ${libro.precio}€, Disponible: ${libro.disponible}")
                     }
                     print("ID del libro a eliminar: ")
                     val id = scanner.nextInt()
                     scanner.nextLine()
                     LibrosDAO.eliminarLibro(id)
                     LibrosDAO.listarLibros().forEach { libro ->
-                        println("  - ID: ${libro.id}, Título: ${libro.titulo}, Autor: ${libro.autor}, Editorial: ${libro.editorial}, Precio: ${libro.precio}€")
+                        println("  - ID: ${libro.id}, Título: ${libro.titulo}, Autor: ${libro.autor}, Editorial: ${libro.editorial}, Precio: ${libro.precio}€, Disponible: ${libro.disponible}")
                     }
                 }
                 0 -> {
@@ -132,18 +138,6 @@ fun main() {
     scanner.close()
 }
 
-fun menu() {
-    println()
-    println("---------------------------------")
-    println(" - Menú DaviTeca")
-    println("1. Mostrar libros")
-    println("2. Mostrar libro (por ID)")
-    println("3. Añadir libro")
-    println("4. Modificar libro (por ID)")
-    println("5. Eliminar libro (por ID)")
-    println("0. Salir")
-    println("---------------------------------")
-}
 
 
 

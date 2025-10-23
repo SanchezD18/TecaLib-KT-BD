@@ -1,30 +1,29 @@
 import java.util.*
 
-data class Libro(
-    val id: Int? = null, // lo genera SQLite automáticamente
-    val titulo: String,
-    val autor: String,
-    val editorial: String,
-    val precio: Double,
-    val disponible: Boolean
+data class Cliente(
+    val dni: String,
+    val nombre: String,
+    val apellidos: String,
+    val telefono: Int,
+    val email: String,
 )
 
-object LibrosDAO {
+object ClientesDAO {
 
-    fun listarLibros(): List<Libro> {
-        val lista = mutableListOf<Libro>()
+    // Listar todos los clientes
+    fun listarClientes(): List<Cliente> {
+        val lista = mutableListOf<Cliente>()
         getConnection()?.use { conn ->
             conn.createStatement().use { stmt ->
-                val rs = stmt.executeQuery("SELECT * FROM Libros")
+                val rs = stmt.executeQuery("SELECT * FROM Clientes")
                 while (rs.next()) {
                     lista.add(
-                        Libro(
-                            id = rs.getInt("id_libro"),
-                            titulo = rs.getString("titulo"),
-                            autor = rs.getString("autor"),
-                            editorial = rs.getString("editorial"),
-                            precio = rs.getDouble("precio"),
-                            disponible = rs.getInt("disponible") == 1
+                        Cliente(
+                            dni = rs.getString("dni"),
+                            nombre = rs.getString("nombre"),
+                            apellidos = rs.getString("apellidos"),
+                            telefono = rs.getInt("telefono"),
+                            email = rs.getString("email"),
                         )
                     )
                 }
@@ -33,83 +32,80 @@ object LibrosDAO {
         return lista
     }
 
-    // Consultar libro por ID
-    fun consultarLibroPorID(id: Int): Libro? {
-        var libro: Libro? = null
+    // Consultar cliente por DNI
+    fun consultarClientePorDNI(dni: String): Cliente? {
+        var cliente: Cliente? = null
         getConnection()?.use { conn ->
-            conn.prepareStatement("SELECT * FROM Libros WHERE id_libro = ?").use { pstmt ->
-                pstmt.setInt(1, id)
+            conn.prepareStatement("SELECT * FROM Clientes WHERE dni = ?").use { pstmt ->
+                pstmt.setString(1, dni)
                 val rs = pstmt.executeQuery()
                 if (rs.next()) {
-                    libro = Libro(
-                        id = rs.getInt("id_libro"),
-                        titulo = rs.getString("titulo"),
-                        autor = rs.getString("autor"),
-                        editorial = rs.getString("editorial"),
-                        precio = rs.getDouble("precio"),
-                        disponible = rs.getInt("disponible") == 1
+                    cliente = Cliente(
+                        dni = rs.getString("dni"),
+                        nombre = rs.getString("nombre"),
+                        apellidos = rs.getString("apellidos"),
+                        telefono = rs.getInt("telefono"),
+                        email = rs.getString("email"),
                     )
                 }
             }
         } ?: println("No se pudo establecer la conexión.")
-        return libro
+        return cliente
     }
 
-    fun insertarLibro(libro: Libro) {
+    // Insertar cliente completo
+    fun insertarCliente(cliente: Cliente) {
         getConnection()?.use { conn ->
             conn.prepareStatement(
-                "INSERT INTO Libros(titulo, autor, editorial, precio) VALUES (?, ?, ?, ?, ?)"
+                "INSERT INTO Cliente(dni, nombre, apellidos, telefono) VALUES (?, ?, ?, ?)"
             ).use { pstmt ->
-                pstmt.setString(1, libro.titulo)
-                pstmt.setString(2, libro.autor)
-                pstmt.setString(3, libro.editorial)
-                pstmt.setDouble(4, libro.precio)
-                pstmt.setInt(5, 1)
+                pstmt.setString(1, cliente.dni)
+                pstmt.setString(2, cliente.nombre)
+                pstmt.setString(3, cliente.apellidos)
+                pstmt.setInt(4, cliente.telefono)
+                pstmt.setString(5, cliente.email)
                 pstmt.executeUpdate()
-                println("Libro '${libro.titulo}' insertada con éxito.")
+                println("Cliente '${cliente.nombre}' insertado con éxito.")
             }
         } ?: println("No se pudo establecer la conexión.")
     }
 
-    fun actualizarLibro(libro: Libro) {
-        if (libro.id == null) {
-            println("No se puede actualizar un libro sin id.")
+    // Actualizar cliente por DNI
+    fun actualizarCliente(cliente: Cliente) {
+        if (cliente.dni == null) {
+            println("No se puede actualizar un cliente sin dni.")
             return
         }
         getConnection()?.use { conn ->
             conn.prepareStatement(
-                "UPDATE Libros SET titulo = ?, autor = ?, editorial = ?, precio = ?, disponible = ? WHERE id_libro = ?"
+                "UPDATE Clientes SET dni = ?, nombre = ?, apellidos = ?, telefono = ?, email = ? WHERE id_cliente = ?"
             ).use { pstmt ->
-                val disponible: Int = if(libro.disponible) {
-                    1
-                } else{
-                    0
-                }
-                pstmt.setString(1, libro.titulo)
-                pstmt.setString(2, libro.autor)
-                pstmt.setString(3, libro.editorial)
-                pstmt.setDouble(4, libro.precio)
-                pstmt.setInt(5, disponible)
-                pstmt.setInt(6, libro.id)
+                pstmt.setString(1, cliente.dni)
+                pstmt.setString(2, cliente.nombre)
+                pstmt.setString(3, cliente.apellidos)
+                pstmt.setInt(4, cliente.telefono)
+                pstmt.setString(5, cliente.email)
+                pstmt.setString(6, cliente.dni)
                 val filas = pstmt.executeUpdate()
                 if (filas > 0) {
-                    println("Libro con id=${libro.id} actualizado con éxito.")
+                    println("Cliente con DNI = ${cliente.dni} actualizado con éxito.")
                 } else {
-                    println("No se encontró ningun libro con id=${libro.id}.")
+                    println("No se encontró ningún cliente con DNI = ${cliente.dni}.")
                 }
             }
         } ?: println("No se pudo establecer la conexión.")
     }
 
-    fun eliminarLibro(id: Int) {
+    // Eliminar cliente por DNI
+    fun eliminarCliente(dni: String) {
         getConnection()?.use { conn ->
-            conn.prepareStatement("DELETE FROM Libros WHERE id_libro = ?").use { pstmt ->
-                pstmt.setInt(1, id)
+            conn.prepareStatement("DELETE FROM Libros WHERE dni = ?").use { pstmt ->
+                pstmt.setString(1, dni)
                 val filas = pstmt.executeUpdate()
                 if (filas > 0) {
-                    println("Libro con id=$id eliminado correctamente.")
+                    println("Cliente con DNI = $dni eliminado correctamente.")
                 } else {
-                    println("No se encontró ningun libro con id=$id.")
+                    println("No se encontró ningún cliente con DNI = $dni.")
                 }
             }
         } ?: println("No se pudo establecer la conexión.")
@@ -117,19 +113,20 @@ object LibrosDAO {
 }
 
 
-fun menuLibros(){
+
+fun menuClientes(){
     val scanner = Scanner(System.`in`)
     var seguir = true
     while (seguir) {
         println()
         println("---------------------------------")
-        println(" - Menú Libros")
-        println("1. Mostrar libros")
-        println("2. Mostrar libro (por ID)")
-        println("3. Añadir libro")
-        println("4. Modificar libro (por ID)")
-        println("5. Eliminar libro (por ID)")
-        println("0. Salir")
+        println(" - Menú Clientes")
+        println("1. Mostrar clientes")
+        println("2. Mostrar cliente (por DNI)")
+        println("3. Añadir cliente")
+        println("4. Modificar cliente (por DNI)")
+        println("5. Eliminar cliente (por DNI)")
+        println("0. Atrás")
         println("---------------------------------")
         print("Selecciona una opción: ")
         try {
@@ -138,46 +135,50 @@ fun menuLibros(){
             when (opcion) {
                 1 -> {
                     println()
-                    println("--- Mostrar libros ---")
-                    LibrosDAO.listarLibros().forEach { libro ->
-                        println("  - ID: ${libro.id}, Título: ${libro.titulo}, Autor: ${libro.autor}, Editorial: ${libro.editorial}, Precio: ${libro.precio}€, Disponible: ${libro.disponible}")
+                    println("--- Mostrar clientes ---")
+                    ClientesDAO.listarClientes().forEach { cliente ->
+                        println("  - DNI: ${cliente.dni}, Nombre completo: ${cliente.nombre} ${cliente.apellidos}  Teléfono: ${cliente.telefono}, Email: ${cliente.email}€")
                     }
                 }
                 2 -> {
                     println()
-                    println("--- Mostrar libro por ID ---")
-                    print("Introduce el ID: ")
-                    val idlibro = scanner.nextInt()
-                    scanner.nextLine()
+                    println("--- Mostrar libro por DNI ---")
+                    print("Introduce el DNI: ")
+                    val dniCliente = scanner.nextLine()
 
-                    val libro = LibrosDAO.consultarLibroPorID(idlibro)
-                    if (libro != null) {
-                        println("Libro encontrado: - ID: ${libro.id}, Título: ${libro.titulo}, Autor: ${libro.autor}, Editorial: ${libro.editorial}, Precio: ${libro.precio}€, Disponible: ${libro.disponible}")
+                    val cliente = ClientesDAO.consultarClientePorDNI(dniCliente)
+                    if (cliente != null) {
+                        println("Cliente encontrado:- DNI: ${cliente.dni}, Nombre completo: ${cliente.nombre} ${cliente.apellidos}  Teléfono: ${cliente.telefono}, Email: ${cliente.email}€")
                     } else {
-                        println("No se encontró ningun libro con ese ID.")
+                        println("No se encontró ningún cliente con ese DNI.")
                     }
                 }
                 3 -> {
-                    println("--- Añadir libro ---")
-                    print("Título: ")
-                    val titulo = scanner.nextLine()
-                    print("Autor: ")
-                    val autor = scanner.nextLine()
-                    print("Editorial: ")
-                    val editorial = scanner.nextLine()
-                    print("Precio: ")
-                    val precio = scanner.nextDouble()
+                    println("--- Añadir cliente ---")
+                    print("DNI: ")
+                    val dni = scanner.nextLine()
+                    print("Nombre: ")
+                    val nombre = scanner.nextLine()
+                    print("Apellidos: ")
+                    val apellidos = scanner.nextLine()
+                    print("Teléfono: ")
+                    val telefono = scanner.nextInt()
                     scanner.nextLine()
-                    LibrosDAO.insertarLibro(
-                        Libro(
-                            titulo = titulo,
-                            autor = autor,
-                            editorial = editorial,
-                            precio = precio,
-                            disponible = true
+                    print("Email: ")
+                    val email = scanner.nextLine()
+                    ClientesDAO.insertarCliente(
+                        Cliente(
+                            dni = dni,
+                            nombre = nombre,
+                            apellidos = apellidos,
+                            telefono = telefono,
+                            email = email
                         )
                     )
                 }
+
+                //SEGUIR DESDE AQUI -->
+
                 4 -> {
                     println()
                     println("--- Modificar precio ---")
