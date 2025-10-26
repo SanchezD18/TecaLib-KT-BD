@@ -35,18 +35,7 @@ fun main() {
                     menuLibros()
                 }
                 2 -> {
-                    println()
-                    println("--- Mostrar libro por ID ---")
-                    print("Introduce el ID: ")
-                    val idlibro = scanner.nextInt()
-                    scanner.nextLine()
-
-                    val libro = LibrosDAO.consultarLibroPorID(idlibro)
-                    if (libro != null) {
-                        println("Libro encontrado: - ID: ${libro.id}, Título: ${libro.titulo}, Autor: ${libro.autor}, Editorial: ${libro.editorial}, Precio: ${libro.precio}€, Disponible: ${libro.disponible}")
-                    } else {
-                        println("No se encontró ningun libro con ese ID.")
-                    }
+                   menuClientes()
                 }
                 3 -> {
                     println("--- Añadir libro ---")

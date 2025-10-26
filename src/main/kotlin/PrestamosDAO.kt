@@ -1,29 +1,29 @@
 import java.util.*
 
-data class Cliente(
+data class Prestamo(
+    val idPrestamo: Int? = null,
+    val fechaPrestamo: Date,
+    val fechaDevolucion: Date,
     val dni: String,
-    val nombre: String,
-    val apellidos: String,
-    val telefono: Int,
-    val email: String,
+    val idLibro: Int,
 )
 
-object ClientesDAO {
+object PrestamosDAO {
 
-    // Listar todos los clientes
-    fun listarClientes(): List<Cliente> {
-        val lista = mutableListOf<Cliente>()
+    // Listar todos los Prestamos
+    fun listarPrestamos(): List<Prestamo> {
+        val lista = mutableListOf<Prestamo>()
         getConnection()?.use { conn ->
             conn.createStatement().use { stmt ->
-                val rs = stmt.executeQuery("SELECT * FROM Clientes")
+                val rs = stmt.executeQuery("SELECT * FROM Prestamos")
                 while (rs.next()) {
                     lista.add(
-                        Cliente(
+                        Prestamo(
+                            idPrestamo = rs.getInt("id_prestamo"),
+                            fechaPrestamo = rs.getDate("fecha_prestamo"),
+                            fechaDevolucion = rs.getDate("fecha_devolucion"),
                             dni = rs.getString("dni"),
-                            nombre = rs.getString("nombre"),
-                            apellidos = rs.getString("apellidos"),
-                            telefono = rs.getInt("telefono"),
-                            email = rs.getString("email"),
+                            idLibro = rs.getInt("id_libro"),
                         )
                     )
                 }
@@ -32,43 +32,44 @@ object ClientesDAO {
         return lista
     }
 
-    // Consultar cliente por DNI
-    fun consultarClientePorDNI(dni: String): Cliente? {
-        var cliente: Cliente? = null
+    // Consultar Prestamo por ID
+    fun consultarPrestamoPorID(idPrestamo: Int): Prestamo? {
+        val prestamo: Prestamo? = null
         getConnection()?.use { conn ->
-            conn.prepareStatement("SELECT * FROM Clientes WHERE dni = ?").use { pstmt ->
-                pstmt.setString(1, dni)
+            conn.prepareStatement("SELECT * FROM Prestamos WHERE id_prestamo = ?").use { pstmt ->
+                pstmt.setInt(1, idPrestamo)
                 val rs = pstmt.executeQuery()
                 if (rs.next()) {
-                    cliente = Cliente(
+                    Prestamo(
+                        idPrestamo = rs.getInt("id_prestamo"),
+                        fechaPrestamo = rs.getDate("fecha_prestamo"),
+                        fechaDevolucion = rs.getDate("fecha_devolucion"),
                         dni = rs.getString("dni"),
-                        nombre = rs.getString("nombre"),
-                        apellidos = rs.getString("apellidos"),
-                        telefono = rs.getInt("telefono"),
-                        email = rs.getString("email"),
+                        idLibro = rs.getInt("id_libro"),
                     )
                 }
             }
         } ?: println("No se pudo establecer la conexión.")
-        return cliente
+        return prestamo
     }
 
-    // Insertar cliente completo
-    fun insertarCliente(cliente: Cliente) {
+    // Crear prestamo completo
+    fun crearPrestamo(prestamo: Prestamo) {
         getConnection()?.use { conn ->
             conn.prepareStatement(
-                "INSERT INTO Clientes(dni, nombre, apellidos, telefono, email) VALUES (?, ?, ?, ?, ?)"
+                "INSERT INTO Prestamos(fecha_prestamo, fecha_devolucion, dni, id_libro) VALUES (?, ?, ?, ?)"
             ).use { pstmt ->
-                pstmt.setString(1, cliente.dni)
-                pstmt.setString(2, cliente.nombre)
-                pstmt.setString(3, cliente.apellidos)
-                pstmt.setInt(4, cliente.telefono)
-                pstmt.setString(5, cliente.email)
+                pstmt.setDate(1, prestamo.fechaPrestamo as java.sql.Date?)
+                pstmt.setDate(2, prestamo.fechaDevolucion as java.sql.Date?)
+                pstmt.setString(3, prestamo.dni)
+                pstmt.setInt(4, prestamo.idLibro)
                 pstmt.executeUpdate()
-                println("Cliente '${cliente.nombre}' insertado con éxito.")
+                println("Prestamo '${prestamo.idPrestamo}' creado con éxito.")
             }
         } ?: println("No se pudo establecer la conexión.")
     }
+
+    //SEGUIR POR AQUÍ
 
     // Actualizar cliente por DNI
     fun actualizarCliente(cliente: Cliente) {
@@ -114,18 +115,18 @@ object ClientesDAO {
 
 
 
-fun menuClientes(){
+fun menuPrestamos(){
     val scanner = Scanner(System.`in`)
     var seguir = true
     while (seguir) {
         println()
         println("---------------------------------")
-        println(" - Menú Clientes")
-        println("1. Mostrar clientes")
-        println("2. Mostrar cliente (por DNI)")
-        println("3. Añadir cliente")
-        println("4. Modificar cliente (por DNI)")
-        println("5. Eliminar cliente (por DNI)")
+        println(" - Menú Prestamos")
+        println("1. Mostrar prestamos")
+        println("2. Mostrar prestamo (por ID)")
+        println("3. Añadir prestamo`")
+        println("4. Modificar prestamo (por ID)")
+        println("5. Eliminar prestamo (por ID)")
         println("0. Atrás")
         println("---------------------------------")
         print("Selecciona una opción: ")
@@ -135,44 +136,40 @@ fun menuClientes(){
             when (opcion) {
                 1 -> {
                     println()
-                    println("--- Mostrar clientes ---")
-                    ClientesDAO.listarClientes().forEach { cliente ->
-                        println("  - DNI: ${cliente.dni}, Nombre completo: ${cliente.nombre} ${cliente.apellidos}  Teléfono: ${cliente.telefono}, Email: ${cliente.email}€")
+                    println("--- Mostrar Prestamos ---")
+                    PrestamosDAO.listarPrestamos().forEach { prestamo ->
+                        println("  - Prestamo : ${prestamo.idPrestamo}, Cliente: ${prestamo.dni} Libro: ${prestamo.idLibro}, Fecha prestamo: ${prestamo.fechaPrestamo}, Fecha Devolución ${prestamo.fechaDevolucion}")
                     }
                 }
                 2 -> {
                     println()
-                    println("--- Mostrar libro por DNI ---")
+                    println("--- Mostrar prestamo por ID ---")
                     print("Introduce el DNI: ")
-                    val dniCliente = scanner.nextLine()
+                    val idPrestamo = scanner.nextInt()
 
-                    val cliente = ClientesDAO.consultarClientePorDNI(dniCliente)
-                    if (cliente != null) {
-                        println("Cliente encontrado:- DNI: ${cliente.dni}, Nombre completo: ${cliente.nombre} ${cliente.apellidos}  Teléfono: ${cliente.telefono}, Email: ${cliente.email}€")
+                    val prestamo = PrestamosDAO.consultarPrestamoPorID(idPrestamo)
+                    if (prestamo != null) {
+                        println("Prestamo encontrado - Prestamo : ${prestamo.idPrestamo}, Cliente: ${prestamo.dni} Libro: ${prestamo.idLibro}, Fecha prestamo: ${prestamo.fechaPrestamo}, Fecha Devolución ${prestamo.fechaDevolucion}")
                     } else {
                         println("No se encontró ningún cliente con ese DNI.")
                     }
                 }
                 3 -> {
-                    println("--- Añadir cliente ---")
-                    print("DNI: ")
-                    val dni = scanner.nextLine()
-                    print("Nombre: ")
-                    val nombre = scanner.nextLine()
-                    print("Apellidos: ")
-                    val apellidos = scanner.nextLine()
-                    print("Teléfono: ")
-                    val telefono = scanner.nextInt()
+                    println("--- Tomar prestado libro ---")
+                    LibrosDAO.listarLibros().forEach { libro ->
+                        println("  - ID: ${libro.id}, Título: ${libro.titulo}, Autor: ${libro.autor}, Editorial: ${libro.editorial}, Precio: ${libro.precio}€, Disponible: ${libro.disponible}")
+                    }
+                    print("Introduce el ID del libro: ")
+                    val idLibro = scanner.nextInt()
                     scanner.nextLine()
                     print("Email: ")
-                    val email = scanner.nextLine()
-                    ClientesDAO.insertarCliente(
-                        Cliente(
+                    val dni = scanner.nextLine()
+                    PrestamosDAO.crearPrestamo(
+                        Prestamo(
+                            fechaPrestamo = Date(),
+                            fechaDevolucion = Date(),
                             dni = dni,
-                            nombre = nombre,
-                            apellidos = apellidos,
-                            telefono = telefono,
-                            email = email
+                            idLibro = idLibro
                         )
                     )
                 }
