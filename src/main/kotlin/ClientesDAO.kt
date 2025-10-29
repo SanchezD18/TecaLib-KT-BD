@@ -221,7 +221,7 @@ fun menuClientes(){
                     }
                 }
                 0 -> {
-                    println("¡Buenas noches!")
+                    println("¡Atrás!")
                     seguir = false
                 }
                 else -> {

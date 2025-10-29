@@ -1,15 +1,16 @@
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 data class Prestamo(
     val idPrestamo: Int? = null,
-    val fechaPrestamo: Date,
-    val fechaDevolucion: Date,
+    val fechaPrestamo: String,
+    val fechaDevolucion: String,
     val dni: String,
     val idLibro: Int,
 )
 
 object PrestamosDAO {
-
     // Listar todos los Prestamos
     fun listarPrestamos(): List<Prestamo> {
         val lista = mutableListOf<Prestamo>()
@@ -20,8 +21,8 @@ object PrestamosDAO {
                     lista.add(
                         Prestamo(
                             idPrestamo = rs.getInt("id_prestamo"),
-                            fechaPrestamo = rs.getDate("fecha_prestamo"),
-                            fechaDevolucion = rs.getDate("fecha_devolucion"),
+                            fechaPrestamo = rs.getString("fecha_prestamo"),
+                            fechaDevolucion = rs.getString("fecha_devolucion"),
                             dni = rs.getString("dni"),
                             idLibro = rs.getInt("id_libro"),
                         )
@@ -42,8 +43,8 @@ object PrestamosDAO {
                 if (rs.next()) {
                     Prestamo(
                         idPrestamo = rs.getInt("id_prestamo"),
-                        fechaPrestamo = rs.getDate("fecha_prestamo"),
-                        fechaDevolucion = rs.getDate("fecha_devolucion"),
+                        fechaPrestamo = rs.getString("fecha_prestamo"),
+                        fechaDevolucion = rs.getString("fecha_devolucion"),
                         dni = rs.getString("dni"),
                         idLibro = rs.getInt("id_libro"),
                     )
@@ -59,8 +60,8 @@ object PrestamosDAO {
             conn.prepareStatement(
                 "INSERT INTO Prestamos(fecha_prestamo, fecha_devolucion, dni, id_libro) VALUES (?, ?, ?, ?)"
             ).use { pstmt ->
-                pstmt.setDate(1, prestamo.fechaPrestamo as java.sql.Date?)
-                pstmt.setDate(2, prestamo.fechaDevolucion as java.sql.Date?)
+                pstmt.setString(1, prestamo.fechaPrestamo)
+                pstmt.setString(2, prestamo.fechaDevolucion)
                 pstmt.setString(3, prestamo.dni)
                 pstmt.setInt(4, prestamo.idLibro)
                 pstmt.executeUpdate()
@@ -69,44 +70,42 @@ object PrestamosDAO {
         } ?: println("No se pudo establecer la conexión.")
     }
 
-    //SEGUIR POR AQUÍ
 
-    // Actualizar cliente por DNI
-    fun actualizarCliente(cliente: Cliente) {
-        if (cliente.dni == null) {
-            println("No se puede actualizar un cliente sin dni.")
+    // Actualizar prestamo por ID
+    fun actualizarPrestamo(prestamo: Prestamo) {
+        if (prestamo.idPrestamo == null) {
+            println("No se puede actualizar un prestamo sin id.")
             return
         }
         getConnection()?.use { conn ->
             conn.prepareStatement(
-                "UPDATE Clientes SET dni = ?, nombre = ?, apellidos = ?, telefono = ?, email = ? WHERE id_cliente = ?"
+                "UPDATE Prestamo SET fecha_prestamo = ?, fecha_devolucion = ?, dni = ?, id_libro = ? WHERE id_prestamo = ?"
             ).use { pstmt ->
-                pstmt.setString(1, cliente.dni)
-                pstmt.setString(2, cliente.nombre)
-                pstmt.setString(3, cliente.apellidos)
-                pstmt.setInt(4, cliente.telefono)
-                pstmt.setString(5, cliente.email)
-                pstmt.setString(6, cliente.dni)
+                pstmt.setString(1,prestamo.fechaPrestamo)
+                pstmt.setString(2, prestamo.fechaDevolucion)
+                pstmt.setString(3, prestamo.dni)
+                pstmt.setInt(4, prestamo.idLibro)
+                pstmt.setInt(5, prestamo.idPrestamo)
                 val filas = pstmt.executeUpdate()
                 if (filas > 0) {
-                    println("Cliente con DNI = ${cliente.dni} actualizado con éxito.")
+                    println("Prestamos con ID = ${prestamo.idPrestamo} actualizado con éxito.")
                 } else {
-                    println("No se encontró ningún cliente con DNI = ${cliente.dni}.")
+                    println("No se encontró ningún prestamo con ID = ${prestamo.idPrestamo}.")
                 }
             }
         } ?: println("No se pudo establecer la conexión.")
     }
 
-    // Eliminar cliente por DNI
-    fun eliminarCliente(dni: String) {
+    // Eliminar prestamo por ID
+    fun eliminarPrestamo(idPrestamo: Int) {
         getConnection()?.use { conn ->
-            conn.prepareStatement("DELETE FROM Clientes WHERE dni = ?").use { pstmt ->
-                pstmt.setString(1, dni)
+            conn.prepareStatement("DELETE FROM Prestamo WHERE id_prestamo = ?").use { pstmt ->
+                pstmt.setInt(1, idPrestamo)
                 val filas = pstmt.executeUpdate()
                 if (filas > 0) {
-                    println("Cliente con DNI = $dni eliminado correctamente.")
+                    println("Prestamo con ID = $idPrestamo eliminado correctamente.")
                 } else {
-                    println("No se encontró ningún cliente con DNI = $dni.")
+                    println("No se encontró ningún prestamo con ID = $idPrestamo.")
                 }
             }
         } ?: println("No se pudo establecer la conexión.")
@@ -144,7 +143,7 @@ fun menuPrestamos(){
                 2 -> {
                     println()
                     println("--- Mostrar prestamo por ID ---")
-                    print("Introduce el DNI: ")
+                    print("Introduce el ID: ")
                     val idPrestamo = scanner.nextInt()
 
                     val prestamo = PrestamosDAO.consultarPrestamoPorID(idPrestamo)
@@ -159,15 +158,19 @@ fun menuPrestamos(){
                     LibrosDAO.listarLibros().forEach { libro ->
                         println("  - ID: ${libro.id}, Título: ${libro.titulo}, Autor: ${libro.autor}, Editorial: ${libro.editorial}, Precio: ${libro.precio}€, Disponible: ${libro.disponible}")
                     }
+                    print("Introduce la fecha de hoy: (Formato - DD/MM/AAAA)")
+                    val fechaPrestamo = scanner.nextLine()
+                    print("Introduce la fecha de devolucion: (Formato - DD/MM/AAAA)")
+                    val fechaDevolucion = scanner.nextLine()
                     print("Introduce el ID del libro: ")
                     val idLibro = scanner.nextInt()
                     scanner.nextLine()
-                    print("Email: ")
+                    print("Introduce tu DNI: ")
                     val dni = scanner.nextLine()
                     PrestamosDAO.crearPrestamo(
                         Prestamo(
-                            fechaPrestamo = Date(),
-                            fechaDevolucion = Date(),
+                            fechaPrestamo = fechaPrestamo,
+                            fechaDevolucion = fechaDevolucion,
                             dni = dni,
                             idLibro = idLibro
                         )
@@ -176,49 +179,51 @@ fun menuPrestamos(){
 
                 4 -> {
                     println()
-                    println("--- Modificar precio ---")
-                    ClientesDAO.listarClientes().forEach { cliente ->
-                        println("  - DNI: ${cliente.dni}, Nombre completo: ${cliente.nombre} ${cliente.apellidos}  Teléfono: ${cliente.telefono}, Email: ${cliente.email}€")
+                    println("--- Modificar prestamo ---")
+                    PrestamosDAO.listarPrestamos().forEach { prestamo  ->
+                        println("Prestamo encontrado - Prestamo : ${prestamo.idPrestamo}, Cliente: ${prestamo.dni} Libro: ${prestamo.idLibro}, Fecha prestamo: ${prestamo.fechaPrestamo}, Fecha Devolución ${prestamo.fechaDevolucion}")
                     }
-                    print("DNI del cliente a modificar: ")
-                    val DNICliente = scanner.nextLine()
-                    print("Nuevo Nombre: ")
-                    val nuevoNombre = scanner.nextLine()
-                    print("Nuevos Apellidos: ")
-                    val nuevosApellidos = scanner.nextLine()
-                    print("Nuevo teléfono: ")
-                    val nuevoTelefono = scanner.nextInt()
+                    print("ID del prestamo a modificar: ")
+                    val idPrestamo = scanner.nextInt()
+                    print("Fecha prestamo:  ")
+                    val nuevaFechaPrestamo = scanner.nextLine()
+                    print("Fecha devolución: ")
+                    val nuevaFechaDevolucion = scanner.nextLine()
+                    print("Nuevo DNI: ")
+                    val nuevoDNI = scanner.nextLine()
+                    print("Nuevo ID de libro: ")
+                    val nuevoIDLibro = scanner.nextInt()
                     scanner.nextLine()
-                    print("Nuevo email: ")
-                    val nuevoEmail = scanner.nextLine()
 
-                    ClientesDAO.actualizarCliente(Cliente(
-                        dni = DNICliente,
-                        nombre = nuevoNombre,
-                        apellidos = nuevosApellidos,
-                        telefono = nuevoTelefono,
-                        email = nuevoEmail
+
+                    PrestamosDAO.actualizarPrestamo(Prestamo(
+                        idPrestamo = idPrestamo,
+                        fechaPrestamo = nuevaFechaPrestamo,
+                        fechaDevolucion = nuevaFechaDevolucion,
+                        dni = nuevoDNI,
+                        idLibro = nuevoIDLibro
                     ))
 
-                    ClientesDAO.listarClientes().forEach { cliente ->
-                        println("  - DNI: ${cliente.dni}, Nombre completo: ${cliente.nombre} ${cliente.apellidos}  Teléfono: ${cliente.telefono}, Email: ${cliente.email}€")
+                    PrestamosDAO.listarPrestamos().forEach { prestamo ->
+                        println("Prestamo encontrado - Prestamo : ${prestamo.idPrestamo}, Cliente: ${prestamo.dni} Libro: ${prestamo.idLibro}, Fecha prestamo: ${prestamo.fechaPrestamo}, Fecha Devolución ${prestamo.fechaDevolucion}")
                     }
                 }
                 5 -> {
                     println()
                     println("--- Eliminar cliente ---")
-                    ClientesDAO.listarClientes().forEach { cliente ->
-                        println("  - DNI: ${cliente.dni}, Nombre completo: ${cliente.nombre} ${cliente.apellidos}  Teléfono: ${cliente.telefono}, Email: ${cliente.email}€")
+                    PrestamosDAO.listarPrestamos().forEach { prestamo ->
+                        println("Prestamo encontrado - Prestamo : ${prestamo.idPrestamo}, Cliente: ${prestamo.dni} Libro: ${prestamo.idLibro}, Fecha prestamo: ${prestamo.fechaPrestamo}, Fecha Devolución ${prestamo.fechaDevolucion}")
                     }
                     print("ID del libro a eliminar: ")
-                    val dni = scanner.nextLine()
-                    ClientesDAO.eliminarCliente(dni)
-                    ClientesDAO.listarClientes().forEach { cliente ->
-                        println("  - DNI: ${cliente.dni}, Nombre completo: ${cliente.nombre} ${cliente.apellidos}  Teléfono: ${cliente.telefono}, Email: ${cliente.email}€")
+                    val idPrestamo = scanner.nextInt()
+                    scanner.nextLine()
+                    PrestamosDAO.eliminarPrestamo(idPrestamo)
+                    PrestamosDAO.listarPrestamos().forEach { prestamo ->
+                        println("Prestamo encontrado - Prestamo : ${prestamo.idPrestamo}, Cliente: ${prestamo.dni} Libro: ${prestamo.idLibro}, Fecha prestamo: ${prestamo.fechaPrestamo}, Fecha Devolución ${prestamo.fechaDevolucion}")
                     }
                 }
                 0 -> {
-                    println("¡Buenas noches!")
+                    println("¡Atrás!")
                     seguir = false
                 }
                 else -> {
@@ -233,4 +238,6 @@ fun menuPrestamos(){
             println("Error: ${e.message}")
             scanner.nextLine()
         }
-    }}
+    }
+}
+

@@ -228,7 +228,7 @@ fun menuLibros(){
                     }
                 }
                 0 -> {
-                    println("¡Buenas noches!")
+                    println("¡Atrás!")
                     seguir = false
                 }
                 else -> {
