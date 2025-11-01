@@ -1,17 +1,16 @@
 import java.sql.SQLException
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import java.util.*
 
 data class Prestamo(
     val idPrestamo: Int? = null,    //ID autoincremental
-    val fechaPrestamo: String,
+    val fechaPrestamo: String,      // He optado por poner las fechas en string, no manejo una expresión regular todavía, pero es que con el tipo Date era imposible de gestionar.
     val fechaDevolucion: String,
     val dni: String,
     val idLibro: Int,
 )
 
 object PrestamosDAO {
+    
     // Listar todos los Prestamos
     fun listarPrestamos(): List<Prestamo> {
         val lista = mutableListOf<Prestamo>()
@@ -34,7 +33,7 @@ object PrestamosDAO {
         return lista
     }
 
-    // Consultar Prestamo por ID
+    // Consultar Préstamo por ID
     fun consultarPrestamoPorID(idPrestamo: Int): Prestamo? {
         val prestamo: Prestamo? = null
         getConnection()?.use { conn ->
@@ -55,7 +54,7 @@ object PrestamosDAO {
         return prestamo
     }
 
-    // Crear prestamo completo
+    // Crear préstamo completo
     fun crearPrestamo(prestamo: Prestamo) {
         getConnection()?.use { conn ->
             try {
@@ -78,11 +77,11 @@ object PrestamosDAO {
                     val filasActualizadas = pstmt.executeUpdate()
 
                     if (filasActualizadas == 0) {
-                        throw SQLException("El libro con ID ${prestamo.idLibro} no existe")
+                        throw SQLException("El libro con ID ${prestamo.idLibro} no existe.")
                     }
                 }
                 conn.commit()
-                println("Préstamo creado con éxito y libro marcado como no disponible.")
+                println("Préstamo creado con éxito.")
 
             } catch (e: SQLException) {
                 conn.rollback()
@@ -94,10 +93,10 @@ object PrestamosDAO {
         } ?: println("No se pudo establecer la conexión.")
     }
 
-    // Actualizar prestamo por ID
+    // Actualizar préstamo por ID
     fun actualizarPrestamo(prestamo: Prestamo) {
         if (prestamo.idPrestamo == null) {
-            println("No se puede actualizar un prestamo sin id.")
+            println("No se puede actualizar un préstamo sin id.")
             return
         }
         getConnection()?.use { conn ->
@@ -111,7 +110,7 @@ object PrestamosDAO {
                 pstmt.setInt(5, prestamo.idPrestamo)
                 val filas = pstmt.executeUpdate()
                 if (filas > 0) {
-                    println("Prestamos con ID = ${prestamo.idPrestamo} actualizado con éxito.")
+                    println("Préstamo con ID = ${prestamo.idPrestamo} actualizado con éxito.")
                 } else {
                     println("No se encontró ningún prestamo con ID = ${prestamo.idPrestamo}.")
                 }
@@ -119,16 +118,16 @@ object PrestamosDAO {
         } ?: println("No se pudo establecer la conexión.")
     }
 
-    // Eliminar prestamo por ID
+    // Eliminar préstamo por ID
     fun eliminarPrestamo(idPrestamo: Int) {
         getConnection()?.use { conn ->
-            conn.prepareStatement("DELETE FROM Prestamo WHERE id_prestamo = ?").use { pstmt ->
+            conn.prepareStatement("DELETE FROM Prestamos WHERE id_prestamo = ?").use { pstmt ->
                 pstmt.setInt(1, idPrestamo)
                 val filas = pstmt.executeUpdate()
                 if (filas > 0) {
-                    println("Prestamo con ID = $idPrestamo eliminado correctamente.")
+                    println("Préstamo con ID = $idPrestamo eliminado correctamente.")
                 } else {
-                    println("No se encontró ningún prestamo con ID = $idPrestamo.")
+                    println("No se encontró ningún préstamo con ID = $idPrestamo.")
                 }
             }
         } ?: println("No se pudo establecer la conexión.")
@@ -145,10 +144,10 @@ fun menuPrestamos(){
         println("---------------------------------")
         println(" - Menú Prestamos")
         println("1. Mostrar prestamos")
-        println("2. Mostrar prestamo (por ID)")
-        println("3. Añadir prestamo")
-        println("4. Modificar prestamo (por ID)")
-        println("5. Eliminar prestamo (por ID)")
+        println("2. Mostrar préstamo (por ID)")
+        println("3. Añadir préstamo")
+        println("4. Modificar préstamo (por ID)")
+        println("5. Eliminar préstamo (por ID)")
         println("0. Atrás")
         println("---------------------------------")
         print("Selecciona una opción: ")
@@ -160,7 +159,9 @@ fun menuPrestamos(){
                     println()
                     println("--- Mostrar Prestamos ---")
                     PrestamosDAO.listarPrestamos().forEach { prestamo ->
-                        println("  - Prestamo : ${prestamo.idPrestamo}, Cliente: ${prestamo.dni} Libro: ${prestamo.idLibro}, Fecha prestamo: ${prestamo.fechaPrestamo}, Fecha Devolución ${prestamo.fechaDevolucion}")
+                        val tituloLibro = LibrosDAO.consultarLibroPorID(prestamo.idLibro)?.titulo ?: "Desconocido"   // Esto me lo ha recomendado IntelliJ, lo que entiendo es que si no es null me ponga el titulo y si es null que ponga desconocido, para "manejar" el error sin parar el programa.
+                        val nombreCliente = ClientesDAO.consultarClientePorDNI(prestamo.dni)?.nombre ?: "Desconocido"
+                        println("  - Préstamo : ${prestamo.idPrestamo}, Cliente: $nombreCliente, Libro: $tituloLibro, Fecha prestamo: ${prestamo.fechaPrestamo}, Fecha Devolución ${prestamo.fechaDevolucion}")
                     }
                 }
                 2 -> {
@@ -171,7 +172,9 @@ fun menuPrestamos(){
 
                     val prestamo = PrestamosDAO.consultarPrestamoPorID(idPrestamo)
                     if (prestamo != null) {
-                        println("Prestamo encontrado - Prestamo : ${prestamo.idPrestamo}, Cliente: ${prestamo.dni} Libro: ${prestamo.idLibro}, Fecha prestamo: ${prestamo.fechaPrestamo}, Fecha Devolución ${prestamo.fechaDevolucion}")
+                        val tituloLibro = LibrosDAO.consultarLibroPorID(prestamo.idLibro)?.titulo ?: "Desconocido"
+                        val nombreCliente = ClientesDAO.consultarClientePorDNI(prestamo.dni)?.nombre ?: "Desconocido"
+                        println("Préstamo encontrado - Prestamo : ${prestamo.idPrestamo}, Cliente: $nombreCliente, Libro: $tituloLibro, Fecha prestamo: ${prestamo.fechaPrestamo}, Fecha Devolución ${prestamo.fechaDevolucion}")
                     } else {
                         println("No se encontró ningún prestamo con ese ID.")
                     }
@@ -185,7 +188,7 @@ fun menuPrestamos(){
                     val idLibro = scanner.nextInt()
                     scanner.nextLine()
 
-                    val libro = LibrosDAO.obtenerLibroPorId(idLibro)
+                    val libro = LibrosDAO.consultarLibroPorID(idLibro)
                     if (libro == null) {
                         println("Error: El libro con ID $idLibro no existe.")
                     } else if (!libro.disponible) {
@@ -193,9 +196,9 @@ fun menuPrestamos(){
                     } else {
                         print("Introduce tu DNI: ")
                         val dni = scanner.nextLine()
-                        print("Introduce la fecha de hoy: (Formato - DD/MM/AAAA)")
+                        print("Introduce la fecha de hoy (Formato - DD/MM/AAAA): ")
                         val fechaPrestamo = scanner.nextLine()
-                        print("Introduce la fecha de devolucion: (Formato - DD/MM/AAAA)")
+                        print("Introduce la fecha de devolucion (Formato - DD/MM/AAAA): ")
                         val fechaDevolucion = scanner.nextLine()
 
                         PrestamosDAO.crearPrestamo(
@@ -207,15 +210,15 @@ fun menuPrestamos(){
                             )
                         )
                     }
-
-
                 }
 
                 4 -> {
                     println()
                     println("--- Modificar prestamo ---")
                     PrestamosDAO.listarPrestamos().forEach { prestamo  ->
-                        println("Prestamo encontrado - Prestamo : ${prestamo.idPrestamo}, Cliente: ${prestamo.dni} Libro: ${prestamo.idLibro}, Fecha prestamo: ${prestamo.fechaPrestamo}, Fecha Devolución ${prestamo.fechaDevolucion}")
+                        val tituloLibro = LibrosDAO.consultarLibroPorID(prestamo.idLibro)?.titulo ?: "Desconocido"
+                        val nombreCliente = ClientesDAO.consultarClientePorDNI(prestamo.dni)?.nombre ?: "Desconocido"
+                        println("- Préstamo : ${prestamo.idPrestamo}, Cliente: $nombreCliente, Libro: $tituloLibro, Fecha prestamo: ${prestamo.fechaPrestamo}, Fecha Devolución ${prestamo.fechaDevolucion}")
                     }
                     print("ID del prestamo a modificar: ")
                     val idPrestamo = scanner.nextInt()
@@ -239,21 +242,27 @@ fun menuPrestamos(){
                     ))
 
                     PrestamosDAO.listarPrestamos().forEach { prestamo ->
-                        println("Prestamo encontrado - Prestamo : ${prestamo.idPrestamo}, Cliente: ${prestamo.dni} Libro: ${prestamo.idLibro}, Fecha prestamo: ${prestamo.fechaPrestamo}, Fecha Devolución ${prestamo.fechaDevolucion}")
+                        val tituloLibro = LibrosDAO.consultarLibroPorID(prestamo.idLibro)?.titulo ?: "Desconocido"
+                        val nombreCliente = ClientesDAO.consultarClientePorDNI(prestamo.dni)?.nombre ?: "Desconocido"
+                        println("- Préstamo : ${prestamo.idPrestamo}, Cliente: $nombreCliente, Libro: $tituloLibro, Fecha prestamo: ${prestamo.fechaPrestamo}, Fecha Devolución ${prestamo.fechaDevolucion}")
                     }
                 }
                 5 -> {
                     println()
-                    println("--- Eliminar cliente ---")
+                    println("--- Eliminar prestamo ---")
                     PrestamosDAO.listarPrestamos().forEach { prestamo ->
-                        println("Prestamo encontrado - Prestamo : ${prestamo.idPrestamo}, Cliente: ${prestamo.dni} Libro: ${prestamo.idLibro}, Fecha prestamo: ${prestamo.fechaPrestamo}, Fecha Devolución ${prestamo.fechaDevolucion}")
+                        val tituloLibro = LibrosDAO.consultarLibroPorID(prestamo.idLibro)?.titulo ?: "Desconocido"
+                        val nombreCliente = ClientesDAO.consultarClientePorDNI(prestamo.dni)?.nombre ?: "Desconocido"
+                        println("- Préstamo : ${prestamo.idPrestamo}, Cliente: $nombreCliente, Libro: $tituloLibro, Fecha prestamo: ${prestamo.fechaPrestamo}, Fecha Devolución ${prestamo.fechaDevolucion}")
                     }
-                    print("ID del libro a eliminar: ")
+                    print("ID del prestamo a eliminar: ")
                     val idPrestamo = scanner.nextInt()
                     scanner.nextLine()
                     PrestamosDAO.eliminarPrestamo(idPrestamo)
                     PrestamosDAO.listarPrestamos().forEach { prestamo ->
-                        println("Prestamo encontrado - Prestamo : ${prestamo.idPrestamo}, Cliente: ${prestamo.dni} Libro: ${prestamo.idLibro}, Fecha prestamo: ${prestamo.fechaPrestamo}, Fecha Devolución ${prestamo.fechaDevolucion}")
+                        val tituloLibro = LibrosDAO.consultarLibroPorID(prestamo.idLibro)?.titulo ?: "Desconocido"
+                        val nombreCliente = ClientesDAO.consultarClientePorDNI(prestamo.dni)?.nombre ?: "Desconocido"
+                        println(" - Préstamo : ${prestamo.idPrestamo}, Cliente: $nombreCliente, Libro: $tituloLibro, Fecha prestamo: ${prestamo.fechaPrestamo}, Fecha Devolución ${prestamo.fechaDevolucion}")
                     }
                 }
                 0 -> {

@@ -11,26 +11,6 @@ data class Libro(
 
 object LibrosDAO {
 
-    fun obtenerLibroPorId(id: Int): Libro? {
-        getConnection()?.use { conn ->
-            conn.prepareStatement("SELECT * FROM Libros WHERE id_libro = ?").use { pstmt ->
-                pstmt.setInt(1, id)
-                val rs = pstmt.executeQuery()
-                if (rs.next()) {
-                    return Libro(
-                        id = rs.getInt("id_libro"),
-                        titulo = rs.getString("titulo"),
-                        autor = rs.getString("autor"),
-                        editorial = rs.getString("editorial"),
-                        precio = rs.getDouble("precio"),
-                        disponible = rs.getInt("disponible") == 1
-                    )
-                }
-            }
-        }
-        return null
-    }
-
     fun listarLibros(): List<Libro> {
         val lista = mutableListOf<Libro>()
         getConnection()?.use { conn ->

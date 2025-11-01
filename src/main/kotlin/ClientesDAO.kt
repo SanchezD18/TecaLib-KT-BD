@@ -78,14 +78,13 @@ object ClientesDAO {
         }
         getConnection()?.use { conn ->
             conn.prepareStatement(
-                "UPDATE Clientes SET dni = ?, nombre = ?, apellidos = ?, telefono = ?, email = ? WHERE id_cliente = ?"
+                "UPDATE Clientes SET nombre = ?, apellidos = ?, telefono = ?, email = ? WHERE dni = ?"
             ).use { pstmt ->
-                pstmt.setString(1, cliente.dni)
-                pstmt.setString(2, cliente.nombre)
-                pstmt.setString(3, cliente.apellidos)
-                pstmt.setInt(4, cliente.telefono)
-                pstmt.setString(5, cliente.email)
-                pstmt.setString(6, cliente.dni)
+                pstmt.setString(1, cliente.nombre)
+                pstmt.setString(2, cliente.apellidos)
+                pstmt.setInt(3, cliente.telefono)
+                pstmt.setString(4, cliente.email)
+                pstmt.setString(5, cliente.dni)
                 val filas = pstmt.executeUpdate()
                 if (filas > 0) {
                     println("Cliente con DNI = ${cliente.dni} actualizado con éxito.")
@@ -184,7 +183,7 @@ fun menuClientes(){
                         println("  - DNI: ${cliente.dni}, Nombre completo: ${cliente.nombre} ${cliente.apellidos}, Teléfono: ${cliente.telefono}, Email: ${cliente.email}")
                     }
                     print("DNI del cliente a modificar: ")
-                    val DNICliente = scanner.nextLine()
+                    val dniCliente = scanner.nextLine()
                     print("Nuevo Nombre: ")
                     val nuevoNombre = scanner.nextLine()
                     print("Nuevos Apellidos: ")
@@ -196,7 +195,7 @@ fun menuClientes(){
                     val nuevoEmail = scanner.nextLine()
 
                     ClientesDAO.actualizarCliente(Cliente(
-                        dni = DNICliente,
+                        dni = dniCliente,
                         nombre = nuevoNombre,
                         apellidos = nuevosApellidos,
                         telefono = nuevoTelefono,
