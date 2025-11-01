@@ -1,9 +1,10 @@
+import java.sql.SQLException
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.*
 
 data class Prestamo(
-    val idPrestamo: Int? = null,
+    val idPrestamo: Int? = null,    //ID autoincremental
     val fechaPrestamo: String,
     val fechaDevolucion: String,
     val dni: String,
@@ -57,19 +58,41 @@ object PrestamosDAO {
     // Crear prestamo completo
     fun crearPrestamo(prestamo: Prestamo) {
         getConnection()?.use { conn ->
-            conn.prepareStatement(
-                "INSERT INTO Prestamos(fecha_prestamo, fecha_devolucion, dni, id_libro) VALUES (?, ?, ?, ?)"
-            ).use { pstmt ->
-                pstmt.setString(1, prestamo.fechaPrestamo)
-                pstmt.setString(2, prestamo.fechaDevolucion)
-                pstmt.setString(3, prestamo.dni)
-                pstmt.setInt(4, prestamo.idLibro)
-                pstmt.executeUpdate()
-                println("Prestamo '${prestamo.idPrestamo}' creado con éxito.")
+            try {
+                conn.autoCommit = false
+
+                conn.prepareStatement(
+                    "INSERT INTO Prestamos(fecha_prestamo, fecha_devolucion, dni, id_libro) VALUES (?, ?, ?, ?)"
+                ).use { pstmt ->
+                    pstmt.setString(1, prestamo.fechaPrestamo)
+                    pstmt.setString(2, prestamo.fechaDevolucion)
+                    pstmt.setString(3, prestamo.dni)
+                    pstmt.setInt(4, prestamo.idLibro)
+                    pstmt.executeUpdate()
+                }
+
+                conn.prepareStatement(
+                    "UPDATE Libros SET disponible = 0 WHERE id_libro = ?"
+                ).use { pstmt ->
+                    pstmt.setInt(1, prestamo.idLibro)
+                    val filasActualizadas = pstmt.executeUpdate()
+
+                    if (filasActualizadas == 0) {
+                        throw SQLException("El libro con ID ${prestamo.idLibro} no existe")
+                    }
+                }
+                conn.commit()
+                println("Préstamo creado con éxito y libro marcado como no disponible.")
+
+            } catch (e: SQLException) {
+                conn.rollback()
+                println("Error al crear el préstamo: ${e.message}")
+                throw e
+            } finally {
+                conn.autoCommit = true
             }
         } ?: println("No se pudo establecer la conexión.")
     }
-
 
     // Actualizar prestamo por ID
     fun actualizarPrestamo(prestamo: Prestamo) {
@@ -123,7 +146,7 @@ fun menuPrestamos(){
         println(" - Menú Prestamos")
         println("1. Mostrar prestamos")
         println("2. Mostrar prestamo (por ID)")
-        println("3. Añadir prestamo`")
+        println("3. Añadir prestamo")
         println("4. Modificar prestamo (por ID)")
         println("5. Eliminar prestamo (por ID)")
         println("0. Atrás")
@@ -150,7 +173,7 @@ fun menuPrestamos(){
                     if (prestamo != null) {
                         println("Prestamo encontrado - Prestamo : ${prestamo.idPrestamo}, Cliente: ${prestamo.dni} Libro: ${prestamo.idLibro}, Fecha prestamo: ${prestamo.fechaPrestamo}, Fecha Devolución ${prestamo.fechaDevolucion}")
                     } else {
-                        println("No se encontró ningún cliente con ese DNI.")
+                        println("No se encontró ningún prestamo con ese ID.")
                     }
                 }
                 3 -> {
@@ -158,23 +181,34 @@ fun menuPrestamos(){
                     LibrosDAO.listarLibros().forEach { libro ->
                         println("  - ID: ${libro.id}, Título: ${libro.titulo}, Autor: ${libro.autor}, Editorial: ${libro.editorial}, Precio: ${libro.precio}€, Disponible: ${libro.disponible}")
                     }
-                    print("Introduce la fecha de hoy: (Formato - DD/MM/AAAA)")
-                    val fechaPrestamo = scanner.nextLine()
-                    print("Introduce la fecha de devolucion: (Formato - DD/MM/AAAA)")
-                    val fechaDevolucion = scanner.nextLine()
                     print("Introduce el ID del libro: ")
                     val idLibro = scanner.nextInt()
                     scanner.nextLine()
-                    print("Introduce tu DNI: ")
-                    val dni = scanner.nextLine()
-                    PrestamosDAO.crearPrestamo(
-                        Prestamo(
-                            fechaPrestamo = fechaPrestamo,
-                            fechaDevolucion = fechaDevolucion,
-                            dni = dni,
-                            idLibro = idLibro
+
+                    val libro = LibrosDAO.obtenerLibroPorId(idLibro)
+                    if (libro == null) {
+                        println("Error: El libro con ID $idLibro no existe.")
+                    } else if (!libro.disponible) {
+                        println("Error: El libro '${libro.titulo}' no está disponible para préstamo.")
+                    } else {
+                        print("Introduce tu DNI: ")
+                        val dni = scanner.nextLine()
+                        print("Introduce la fecha de hoy: (Formato - DD/MM/AAAA)")
+                        val fechaPrestamo = scanner.nextLine()
+                        print("Introduce la fecha de devolucion: (Formato - DD/MM/AAAA)")
+                        val fechaDevolucion = scanner.nextLine()
+
+                        PrestamosDAO.crearPrestamo(
+                            Prestamo(
+                                fechaPrestamo = fechaPrestamo,
+                                fechaDevolucion = fechaDevolucion,
+                                dni = dni,
+                                idLibro = idLibro
+                            )
                         )
-                    )
+                    }
+
+
                 }
 
                 4 -> {

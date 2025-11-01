@@ -137,18 +137,18 @@ fun menuClientes(){
                     println()
                     println("--- Mostrar clientes ---")
                     ClientesDAO.listarClientes().forEach { cliente ->
-                        println("  - DNI: ${cliente.dni}, Nombre completo: ${cliente.nombre} ${cliente.apellidos}  Teléfono: ${cliente.telefono}, Email: ${cliente.email}€")
+                        println("  - DNI: ${cliente.dni}, Nombre completo: ${cliente.nombre} ${cliente.apellidos}, Teléfono: ${cliente.telefono}, Email: ${cliente.email}")
                     }
                 }
                 2 -> {
                     println()
-                    println("--- Mostrar libro por DNI ---")
+                    println("--- Mostrar cliente por DNI ---")
                     print("Introduce el DNI: ")
                     val dniCliente = scanner.nextLine()
 
                     val cliente = ClientesDAO.consultarClientePorDNI(dniCliente)
                     if (cliente != null) {
-                        println("Cliente encontrado:- DNI: ${cliente.dni}, Nombre completo: ${cliente.nombre} ${cliente.apellidos}  Teléfono: ${cliente.telefono}, Email: ${cliente.email}€")
+                        println("Cliente encontrado:- DNI: ${cliente.dni}, Nombre completo: ${cliente.nombre} ${cliente.apellidos} Teléfono: ${cliente.telefono}, Email: ${cliente.email}€")
                     } else {
                         println("No se encontró ningún cliente con ese DNI.")
                     }
@@ -179,9 +179,9 @@ fun menuClientes(){
 
                 4 -> {
                     println()
-                    println("--- Modificar precio ---")
+                    println("--- Modificar cliente ---")
                     ClientesDAO.listarClientes().forEach { cliente ->
-                        println("  - DNI: ${cliente.dni}, Nombre completo: ${cliente.nombre} ${cliente.apellidos}  Teléfono: ${cliente.telefono}, Email: ${cliente.email}€")
+                        println("  - DNI: ${cliente.dni}, Nombre completo: ${cliente.nombre} ${cliente.apellidos}, Teléfono: ${cliente.telefono}, Email: ${cliente.email}")
                     }
                     print("DNI del cliente a modificar: ")
                     val DNICliente = scanner.nextLine()
@@ -204,20 +204,20 @@ fun menuClientes(){
                     ))
 
                     ClientesDAO.listarClientes().forEach { cliente ->
-                        println("  - DNI: ${cliente.dni}, Nombre completo: ${cliente.nombre} ${cliente.apellidos}  Teléfono: ${cliente.telefono}, Email: ${cliente.email}€")
+                        println("  - DNI: ${cliente.dni}, Nombre completo: ${cliente.nombre} ${cliente.apellidos}, Teléfono: ${cliente.telefono}, Email: ${cliente.email}")
                     }
                 }
                 5 -> {
                     println()
                     println("--- Eliminar cliente ---")
                     ClientesDAO.listarClientes().forEach { cliente ->
-                        println("  - DNI: ${cliente.dni}, Nombre completo: ${cliente.nombre} ${cliente.apellidos}  Teléfono: ${cliente.telefono}, Email: ${cliente.email}€")
+                        println("  - DNI: ${cliente.dni}, Nombre completo: ${cliente.nombre} ${cliente.apellidos}, Teléfono: ${cliente.telefono}, Email: ${cliente.email}")
                     }
-                    print("ID del libro a eliminar: ")
+                    print("ID del cliente a eliminar: ")
                     val dni = scanner.nextLine()
                     ClientesDAO.eliminarCliente(dni)
                     ClientesDAO.listarClientes().forEach { cliente ->
-                        println("  - DNI: ${cliente.dni}, Nombre completo: ${cliente.nombre} ${cliente.apellidos}  Teléfono: ${cliente.telefono}, Email: ${cliente.email}€")
+                        println("  - DNI: ${cliente.dni}, Nombre completo: ${cliente.nombre} ${cliente.apellidos}, Teléfono: ${cliente.telefono}, Email: ${cliente.email}")
                     }
                 }
                 0 -> {
