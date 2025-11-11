@@ -148,6 +148,7 @@ fun menuPrestamos(){
         println("3. Añadir préstamo")
         println("4. Modificar préstamo (por ID)")
         println("5. Eliminar préstamo (por ID)")
+        println("6. Consultar información completa de prestamos.")
         println("0. Atrás")
         println("---------------------------------")
         print("Selecciona una opción: ")
@@ -159,7 +160,7 @@ fun menuPrestamos(){
                     println()
                     println("--- Mostrar Prestamos ---")
                     PrestamosDAO.listarPrestamos().forEach { prestamo ->
-                        val tituloLibro = LibrosDAO.consultarLibroPorID(prestamo.idLibro)?.titulo ?: "Desconocido"   // Esto me lo ha recomendado IntelliJ, lo que entiendo es que si no es null me ponga el titulo y si es null que ponga desconocido, para "manejar" el error sin parar el programa.
+                        val tituloLibro = LibrosDAO.consultarLibroPorID(prestamo.idLibro)?.titulo ?: "Desconocido"
                         val nombreCliente = ClientesDAO.consultarClientePorDNI(prestamo.dni)?.nombre ?: "Desconocido"
                         println("  - Préstamo : ${prestamo.idPrestamo}, Cliente: $nombreCliente, Libro: $tituloLibro, Fecha prestamo: ${prestamo.fechaPrestamo}, Fecha Devolución ${prestamo.fechaDevolucion}")
                     }
@@ -196,9 +197,9 @@ fun menuPrestamos(){
                     } else {
                         print("Introduce tu DNI: ")
                         val dni = scanner.nextLine()
-                        print("Introduce la fecha de hoy (Formato - DD/MM/AAAA): ")
+                        print("Introduce la fecha de hoy (Formato - DD-MM-AAAA): ")
                         val fechaPrestamo = scanner.nextLine()
-                        print("Introduce la fecha de devolucion (Formato - DD/MM/AAAA): ")
+                        print("Introduce la fecha de devolucion (Formato - DD-MM-AAAA): ")
                         val fechaDevolucion = scanner.nextLine()
 
                         PrestamosDAO.crearPrestamo(
@@ -265,6 +266,22 @@ fun menuPrestamos(){
                         println(" - Préstamo : ${prestamo.idPrestamo}, Cliente: $nombreCliente, Libro: $tituloLibro, Fecha prestamo: ${prestamo.fechaPrestamo}, Fecha Devolución ${prestamo.fechaDevolucion}")
                     }
                 }
+                6 ->{
+                    println()
+                    llamar_sp_obtener_informacion_completa_prestamos()
+                }
+                7 -> {
+                    PrestamosDAO.listarPrestamos().forEach { prestamo ->
+                        val tituloLibro = LibrosDAO.consultarLibroPorID(prestamo.idLibro)?.titulo ?: "Desconocido"
+                        val nombreCliente = ClientesDAO.consultarClientePorDNI(prestamo.dni)?.nombre ?: "Desconocido"
+                        println(" - Préstamo : ${prestamo.idPrestamo}, Cliente: $nombreCliente, Libro: $tituloLibro, Fecha prestamo: ${prestamo.fechaPrestamo}, Fecha Devolución ${prestamo.fechaDevolucion}")
+                    }
+                    println()
+                    print("Introduce el id del prestamo que quieres devolver: ")
+                    val id_Prestamo = scanner.nextInt()
+                    scanner.nextLine()
+                    llamar_sp_devolver_libro(id_Prestamo)
+                }
                 0 -> {
                     println("¡Atrás!")
                     seguir = false
@@ -284,3 +301,45 @@ fun menuPrestamos(){
     }
 }
 
+fun llamar_sp_obtener_informacion_completa_prestamos() {
+    getConnection()?.use { conn ->
+        val sql = "CALL sp_obtener_informacion_completa_prestamos()"
+        conn.prepareStatement(sql).use { stmt ->
+            stmt.executeQuery().use { rs ->
+                println("=== INFORMACIÓN COMPLETA DE PRÉSTAMOS ===")
+                println()
+
+                while (rs.next()) {
+                    println("ID Préstamo: ${rs.getInt("ID Préstamo")}")
+                    println("Fecha Préstamo: ${rs.getString("Fecha Préstamo")}")
+                    println("Fecha Devolución: ${rs.getString("Fecha Devolución") ?: "Pendiente"}")
+                    println("Cliente: ${rs.getString("Cliente")} (DNI: ${rs.getString("DNI")})")
+                    println("Contacto: ${rs.getString("Teléfono")} | ${rs.getString("Email")}")
+                    println("Libro: ${rs.getString("Título Libro")}")
+                    println("Autor: ${rs.getString("Autor")}")
+                    println("Editorial: ${rs.getString("Editorial")}")
+                    println("Precio: ${rs.getDouble("Precio")}€")
+                    println("Estado: ${rs.getString("Estado")}")
+                    println("${"-".repeat(50)}")
+                }
+            }
+        }
+    }
+}
+
+
+fun llamar_sp_devolver_libro(idPrestamo: Int) {
+    getConnection()?.use { conn ->
+        val sql = "CALL sp_devolver_libro(?)"
+        conn.prepareStatement(sql).use { stmt ->
+            stmt.setInt(1, idPrestamo)
+
+            stmt.executeQuery().use { rs ->
+                if (rs.next()) {
+                    val mensaje = rs.getString("mensaje")
+                    println("✓ $mensaje")
+                }
+            }
+        }
+    }
+}

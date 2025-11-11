@@ -4,13 +4,19 @@ import java.sql.SQLException
 import java.util.*
 
 // Ruta al archivo de base de datos SQLite
-const val URL_BD = "jdbc:sqlite:src/main/resources/TecaLib.sqlite"
+const val URL_BD = "jdbc:mysql://ec2-54-172-171-64.compute-1.amazonaws.com:3306/tecalib"
+const val USER = "dsm18"
+const val PASSWORD = "holaHOLA01+"
 
 // Obtener conexión
 fun getConnection(): Connection? {
     return try {
-        DriverManager.getConnection(URL_BD)
+        Class.forName("com.mysql.cj.jdbc.Driver")
+        DriverManager.getConnection(URL_BD, USER, PASSWORD)
     } catch (e: SQLException) {
+        e.printStackTrace()
+        null
+    } catch (e: ClassNotFoundException) {
         e.printStackTrace()
         null
     }

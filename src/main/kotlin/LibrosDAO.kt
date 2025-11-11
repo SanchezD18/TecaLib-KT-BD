@@ -58,7 +58,7 @@ object LibrosDAO {
     fun insertarLibro(libro: Libro) {
         getConnection()?.use { conn ->
             conn.prepareStatement(
-                "INSERT INTO Libros(titulo, autor, editorial, precio) VALUES (?, ?, ?, ?, ?)"
+                "INSERT INTO Libros(titulo, autor, editorial, precio, disponible) VALUES (?, ?, ?, ?, ?)"
             ).use { pstmt ->
                 pstmt.setString(1, libro.titulo)
                 pstmt.setString(2, libro.autor)
@@ -109,7 +109,7 @@ object LibrosDAO {
                 if (filas > 0) {
                     println("Libro con id=$id eliminado correctamente.")
                 } else {
-                    println("No se encontró ningun libro con id=$id.")
+                    println("No se encontró ningún libro con id=$id.")
                 }
             }
         } ?: println("No se pudo establecer la conexión.")
@@ -227,6 +227,15 @@ fun menuLibros(){
                         println("  - ID: ${libro.id}, Título: ${libro.titulo}, Autor: ${libro.autor}, Editorial: ${libro.editorial}, Precio: ${libro.precio}€, Disponible: ${libro.disponible}")
                     }
                 }
+                6 ->{
+                    println()
+                    println("--- Precio total de los libros ---")
+                    llamar_fn_total_valor_planta()
+                }
+                7 ->{
+                    println()
+                    llamar_fn_titulos_disponibles_concatenados()
+                }
                 0 -> {
                     println("¡Atrás!")
                     seguir = false
@@ -244,4 +253,37 @@ fun menuLibros(){
             scanner.nextLine()
         }
     }}
+
+
+
+
+//Funciones MySQL
+fun llamar_fn_total_valor_planta(){
+    getConnection()?.use { conn ->
+        val sql = "SELECT fn_total_valor_libros()"
+        conn.prepareStatement(sql).use { stmt ->
+            stmt.executeQuery().use { rs ->
+                if (rs.next()) {
+                    val resultado = rs.getDouble(1)
+                    println("El precio total de los libros es de: $resultado€")
+                }
+            }
+        }
+    }
+}
+
+fun llamar_fn_titulos_disponibles_concatenados(){
+    getConnection()?.use { conn ->
+        val sql = "SELECT fn_titulos_disponibles_concatenados()"
+        conn.prepareStatement(sql).use { stmt ->
+            stmt.executeQuery().use { rs ->
+                if (rs.next()) {
+                    val resultado = rs.getString(1)
+                    println("--- Listado de Libros ---")
+                    println(resultado)
+                }
+            }
+        }
+    }
+}
 

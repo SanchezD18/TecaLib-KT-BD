@@ -125,6 +125,8 @@ fun menuClientes(){
         println("3. Añadir cliente")
         println("4. Modificar cliente (por DNI)")
         println("5. Eliminar cliente (por DNI)")
+        println("6. Consultar clientes registrados")
+        println("7. Total de prestamos de un cliente (por DNI)")
         println("0. Atrás")
         println("---------------------------------")
         print("Selecciona una opción: ")
@@ -219,6 +221,19 @@ fun menuClientes(){
                         println("  - DNI: ${cliente.dni}, Nombre completo: ${cliente.nombre} ${cliente.apellidos}, Teléfono: ${cliente.telefono}, Email: ${cliente.email}")
                     }
                 }
+                6 -> {
+                    println()
+                    llamar_fn_total_clientes()
+                }
+                7 ->{
+                    println()
+                    print("Introduce el DNI del cliente a comprobar: ")
+                    val dni = scanner.nextLine()
+                    val cliente = ClientesDAO.consultarClientePorDNI(dni)
+                    if (cliente != null) {
+                        llamar_fn_total_prestamos_de_cliente(dni, cliente.nombre)
+                    }
+                }
                 0 -> {
                     println("¡Atrás!")
                     seguir = false
@@ -236,3 +251,33 @@ fun menuClientes(){
             scanner.nextLine()
         }
     }}
+
+
+//Funciones MySQL Clientes
+fun llamar_fn_total_clientes(){
+    getConnection()?.use { conn ->
+        val sql = "SELECT fn_total_clientes()"
+        conn.prepareStatement(sql).use { stmt ->
+            stmt.executeQuery().use { rs ->
+                if (rs.next()) {
+                    val resultado = rs.getDouble(1)
+                    println("Hay un total de $resultado clientes registrados.")
+                }
+            }
+        }
+    }
+}
+
+fun llamar_fn_total_prestamos_de_cliente(dni: String, nombre: String){
+    getConnection()?.use { conn ->
+        val sql = "SELECT fn_total_prestamos_cliente($dni)"
+        conn.prepareStatement(sql).use { stmt ->
+            stmt.executeQuery().use { rs ->
+                if (rs.next()) {
+                    val resultado = rs.getDouble(1)
+                    println("El cliente $nombre tiene $resultado prestamos.")
+                }
+            }
+        }
+    }
+}
