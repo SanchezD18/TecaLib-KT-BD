@@ -129,6 +129,8 @@ fun menuLibros(){
         println("3. Añadir libro")
         println("4. Modificar libro (por ID)")
         println("5. Eliminar libro (por ID)")
+        println("6. Mostrar precio total del inventario")
+        println("7. Mostrar libros disponibles en linea")
         println("0. Salir")
         println("---------------------------------")
         print("Selecciona una opción: ")
@@ -229,8 +231,8 @@ fun menuLibros(){
                 }
                 6 ->{
                     println()
-                    println("--- Precio total de los libros ---")
-                    llamar_fn_total_valor_planta()
+                    println("--- Precio total del inventario ---")
+                    llamar_fn_total_valor_inventario()
                 }
                 7 ->{
                     println()
@@ -257,8 +259,8 @@ fun menuLibros(){
 
 
 
-//Funciones MySQL
-fun llamar_fn_total_valor_planta(){
+//Funciones MySQL Libros
+fun llamar_fn_total_valor_inventario(){
     getConnection()?.use { conn ->
         val sql = "SELECT fn_total_valor_libros()"
         conn.prepareStatement(sql).use { stmt ->

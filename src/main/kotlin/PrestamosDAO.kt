@@ -149,6 +149,7 @@ fun menuPrestamos(){
         println("4. Modificar préstamo (por ID)")
         println("5. Eliminar préstamo (por ID)")
         println("6. Consultar información completa de prestamos.")
+        println("7. Devolver libro")
         println("0. Atrás")
         println("---------------------------------")
         print("Selecciona una opción: ")
@@ -301,6 +302,9 @@ fun menuPrestamos(){
     }
 }
 
+
+
+//PROCEDIMIENTOS DE PRESTAMOS
 fun llamar_sp_obtener_informacion_completa_prestamos() {
     getConnection()?.use { conn ->
         val sql = "CALL sp_obtener_informacion_completa_prestamos()"
